@@ -67,7 +67,7 @@ public class VisualStudioProjectParser {
           if (stream.next() == XMLStreamConstants.START_ELEMENT) {
             String tagName = stream.getLocalName();
 
-            if ("Compile".equals(tagName)) {
+            if ("Compile".equals(tagName) || "ClCompile".equals(tagName)|| "ClInclude".equals(tagName)) {
               handleCompileTag();
             } else if ("OutputType".equals(tagName)) {
               handleOutputTypeTag();
