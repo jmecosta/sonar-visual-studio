@@ -65,7 +65,10 @@ public class VisualStudioProjectBuilderTest {
 
     });
 
-    new VisualStudioProjectBuilder(mock(Settings.class)).build(context, assemblyLocator);
+    Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
+
+    new VisualStudioProjectBuilder(settings).build(context, assemblyLocator);
 
     verify(solutionProject).resetSourceDirs();
 
@@ -133,6 +136,7 @@ public class VisualStudioProjectBuilderTest {
     ProjectDefinition solutionProject = context.projectReactor().getRoot();
 
     Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
     when(settings.getString("sonar.visualstudio.projectKeyStrategy")).thenReturn("unsafe");
     new VisualStudioProjectBuilder(settings).build(context, mock(VisualStudioAssemblyLocator.class));
 
@@ -152,6 +156,7 @@ public class VisualStudioProjectBuilderTest {
     ProjectDefinition solutionProject = context.projectReactor().getRoot();
 
     Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
     when(settings.getString("sonar.visualstudio.projectKeyStrategy")).thenReturn("unsafe");
     new VisualStudioProjectBuilder(settings).build(context, mock(VisualStudioAssemblyLocator.class));
 
@@ -169,8 +174,11 @@ public class VisualStudioProjectBuilderTest {
   public void should_fail_with_several_solutions() {
     thrown.expectMessage("Found several .sln files in ");
 
+    Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
+
     Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/several_sln/"));
-    new VisualStudioProjectBuilder(mock(Settings.class)).build(context);
+    new VisualStudioProjectBuilder(settings).build(context);
   }
 
   @Test
@@ -179,6 +187,7 @@ public class VisualStudioProjectBuilderTest {
     ProjectDefinition solutionProject = context.projectReactor().getRoot();
 
     Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
     when(settings.getString(VisualStudioPlugin.VISUAL_STUDIO_SOLUTION_PROPERTY_KEY)).thenReturn("solution_without_tests.sln");
 
     new VisualStudioProjectBuilder(settings).build(context);
@@ -194,6 +203,7 @@ public class VisualStudioProjectBuilderTest {
     Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/"));
 
     Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
     when(settings.getString(VisualStudioPlugin.VISUAL_STUDIO_SOLUTION_PROPERTY_KEY)).thenReturn("non_existing.sln");
 
     new VisualStudioProjectBuilder(settings).build(context);
@@ -204,18 +214,21 @@ public class VisualStudioProjectBuilderTest {
     Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/no_sln/"));
     ProjectDefinition solutionProject = context.projectReactor().getRoot();
 
-    new VisualStudioProjectBuilder(mock(Settings.class)).build(context);
+    Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
+
+    new VisualStudioProjectBuilder(settings).build(context);
 
     verify(solutionProject, Mockito.never()).addSubProject(Mockito.any(ProjectDefinition.class));
   }
 
   @Test
-  public void should_not_run_when_skip_property_is_set() {
+  public void should_not_run_when_enable_property_is_set_to_false() {
     Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/"));
     ProjectDefinition solutionProject = context.projectReactor().getRoot();
 
     Settings settings = mock(Settings.class);
-    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_SKIP_PROPERTY_KEY)).thenReturn(true);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(false);
 
     new VisualStudioProjectBuilder(settings).build(context);
 
@@ -229,6 +242,7 @@ public class VisualStudioProjectBuilderTest {
     Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/"));
 
     Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
     when(settings.hasKey("sonar.modules")).thenReturn(true);
 
     new VisualStudioProjectBuilder(settings).build(context);
@@ -239,7 +253,11 @@ public class VisualStudioProjectBuilderTest {
     thrown.expectMessage("No Visual Studio projects were found.");
 
     Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/no_projects/"));
-    new VisualStudioProjectBuilder(mock(Settings.class)).build(context);
+
+    Settings settings = mock(Settings.class);
+    when(settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)).thenReturn(true);
+
+    new VisualStudioProjectBuilder(settings).build(context);
   }
 
   private static Context mockContext(String key, File baseDir) {

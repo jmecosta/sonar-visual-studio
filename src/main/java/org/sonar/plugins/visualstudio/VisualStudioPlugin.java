@@ -30,7 +30,7 @@ import java.util.List;
 public class VisualStudioPlugin extends SonarPlugin {
 
   public static final String VISUAL_STUDIO_SOLUTION_PROPERTY_KEY = "sonar.visualstudio.solution";
-  public static final String VISUAL_STUDIO_SKIP_PROPERTY_KEY = "sonar.visualstudio.skip";
+  public static final String VISUAL_STUDIO_ENABLE_PROPERTY_KEY = "sonar.visualstudio.enable";
   public static final String VISUAL_STUDIO_OUTPUT_PATH_PROPERTY_KEY = "sonar.visualstudio.outputPath";
 
   public static final String VISUAL_STUDIO_OLD_SOLUTION_PROPERTY_KEY = "sonar.dotnet.visualstudio.solution.file";
@@ -55,12 +55,13 @@ public class VisualStudioPlugin extends SonarPlugin {
         .onlyOnQualifiers(Qualifiers.PROJECT)
         .build(),
       PropertyDefinition
-        .builder(VISUAL_STUDIO_SKIP_PROPERTY_KEY)
+        .builder(VISUAL_STUDIO_ENABLE_PROPERTY_KEY)
         .category(CATEGORY)
-        .name("Skip the analysis bootstrapping")
+        .name("Enable the analysis bootstrapping")
+        .defaultValue("false")
         .type(PropertyType.BOOLEAN)
         .description("Whether or not the analysis should be bootstrapped from Visual Studio files.")
-        .onlyOnQualifiers(Qualifiers.PROJECT)
+        .onQualifiers(Qualifiers.PROJECT)
         .build(),
       PropertyDefinition
         .builder(VISUAL_STUDIO_OUTPUT_PATH_PROPERTY_KEY)
