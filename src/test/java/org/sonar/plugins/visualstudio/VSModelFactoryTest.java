@@ -32,6 +32,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for visual studio utilities.
@@ -41,13 +42,14 @@ import static org.junit.matchers.JUnitMatchers.containsString;
  */
 public class VSModelFactoryTest {
 
-  private static final String PROJECT_CORE_PATH = "target/test-classes/org/sonar/plugins/cxx/solution/Example/Example.Core/Example.Core.vcxproj";
-  private static final String SAMPLE_FILE_PATH = "target/test-classes/org/sonar/plugins/cxx/solution/Example/Example.Core/Money.cpp";
-  private static final String SOLUTION_PATH = "target/test-classes/org/sonar/plugins/cxx/solution/Example/Example.sln";
-//  private static final String MESSY_SOLUTION_PATH = "target/test-classes/org/sonar/plugins/cxx/solution/MessyTestSolution/MessyTestSolution.sln";
-//  private static final String INVALID_SOLUTION_PATH = "target/test-classes/org/sonar/plugins/cxx/solution/InvalidSolution/InvalidSolution.sln";
-  private static final String SOLUTION_WITH_DUP_PATH = "target/test-classes/org/sonar/plugins/cxx/solution/DuplicatesExample/Example.sln";
-  private static final String SOLUTION_WITH_CUSTOM_BUILD_PATH = "target/test-classes/org/sonar/plugins/cxx/solution/CustomBuild/CustomBuild.sln";
+  private static final String SOLUTIONS_PREFIX = "src/test/resources/solution/";
+  private static final String PROJECT_CORE_PATH = SOLUTIONS_PREFIX + "Example/Example.Core/Example.Core.vcxproj";
+//  private static final String SAMPLE_FILE_PATH = SOLUTIONS_PREFIX + "Example/Example.Core/Money.cpp";
+  private static final String SOLUTION_EXAMPLE_PATH = SOLUTIONS_PREFIX + "Example/";
+//  private static final String MESSY_SOLUTION_PATH = SOLUTIONS_PREFIX + "MessyTestSolution/MessyTestSolution.sln";
+//  private static final String INVALID_SOLUTION_PATH = SOLUTIONS_PREFIX + "InvalidSolution/InvalidSolution.sln";
+  private static final String SOLUTION_WITH_DUP_PATH = SOLUTIONS_PREFIX + "DuplicatesExample/";
+  private static final String SOLUTION_WITH_CUSTOM_BUILD_PATH = SOLUTIONS_PREFIX + "CustomBuild/";
   
   @Test
   public void testReadFiles() {
@@ -57,68 +59,67 @@ public class VSModelFactoryTest {
 
   @Test
   public void testSolutionWithCustomBuild() throws Exception {
-    File file = new File(SOLUTION_WITH_CUSTOM_BUILD_PATH);
-    VisualStudioSolution solution = ModelFactory.getSolution(file);
-    List<BuildConfiguration> buildConfigurations = solution.getBuildConfigurations();
-    assertEquals(9, buildConfigurations.size());
-    assertTrue(buildConfigurations.contains(new BuildConfiguration("Debug")));
-    assertTrue(buildConfigurations.contains(new BuildConfiguration("Release")));
-    assertTrue(buildConfigurations.contains(new BuildConfiguration("CustomCompil")));
-
-    assertEquals(1, solution.getProjects().size());
-//    VisualStudioProject project = solution.getProjects().get(0);
-
-//    assertTrue(project.getArtifact("CustomCompil", "Win32").getAbsolutePath().contains("CustomCompil"));
-//    assertTrue(project.getArtifact("CustomCompil", "Win32").getAbsolutePath().endsWith(project.getName() + ".dll"));
-
+    VisualStudioSolution solution = new VisualStudioSolutionParser().parse(new File(SOLUTION_WITH_CUSTOM_BUILD_PATH + "CustomBuild.sln"));
+    assertEquals(1, solution.projects().size());
+    VisualStudioSolutionProject project = solution.projects().get(0);
+    VisualStudioProject VCproject = new VisualStudioProjectParser().parse(new File(SOLUTION_WITH_CUSTOM_BUILD_PATH + project.path()));
+    List<String> buildConfigurations = VCproject.propertyGroupConditions();
+    assertEquals(3, buildConfigurations.size());
+    assertTrue(buildConfigurations.contains("'$(Configuration)|$(Platform)'=='Debug|Win32'"));
+    assertTrue(buildConfigurations.contains("'$(Configuration)|$(Platform)'=='Release|Win32'"));
+    assertTrue(buildConfigurations.contains("'$(Configuration)|$(Platform)'=='CustomCompil|Win32'"));
   }
 
   @Test
   public void testReadSolution() throws Exception {
-    File file = new File(SOLUTION_PATH);
-    VisualStudioSolution solution = ModelFactory.getSolution(file);
-    VisualStudioProject project = solution.getProject("Example.Core.Tests");
-    Collection<SourceFile> files = project.getSourceFiles();
-    for (SourceFile sourceFile : files) {
-      assertThat(sourceFile.toString()).startsWith("Source(");
-      assertThat(sourceFile.toString()).endsWith(")");
+    VisualStudioSolution solution = new VisualStudioSolutionParser().parse(new File(SOLUTION_EXAMPLE_PATH + "Example.sln"));
+    // read "Example.Core.Tests"
+    VisualStudioSolutionProject project = solution.projects().get(2);
+    VisualStudioProject VCproject = new VisualStudioProjectParser().parse(new File(SOLUTION_EXAMPLE_PATH + project.path()));
+    Collection<String> files = VCproject.files();
+    for (String sourceFile : files) {
+      assertThat(sourceFile.startsWith("Source("));
+      assertThat(sourceFile.endsWith(")"));
     }
     assertEquals("Bad number of files extracted", 4, files.size());
   }
 
   @Test
   public void testProjecFiles() throws Exception {
-    File file = new File(PROJECT_CORE_PATH);
-    VisualStudioProject project = ModelFactory.getProject(file);
+    VisualStudioProject project = new VisualStudioProjectParser().parse(new File(PROJECT_CORE_PATH));
     assertNotNull("Could not retrieve a project ", project);
-    Collection<SourceFile> sourceFiles = project.getSourceFiles();
+    Collection<String> sourceFiles = project.files();
     assertEquals("Bad number of files extracted", 7, sourceFiles.size());
   }
 
   @Test
-  public void testProjectFolder() throws Exception {
-    File projectFile = new File(PROJECT_CORE_PATH);
-    VisualStudioProject project = ModelFactory.getProject(projectFile);
-    File sourceFile = new File(SAMPLE_FILE_PATH);
-    String relativePath = project.getRelativePath(sourceFile);
-    assertThat("Invalid relative path", relativePath, containsString("Money.cpp"));
+  public void testSolutionWithAssemblyNameDuplicates() throws Exception {
+    VisualStudioSolution solution = new VisualStudioSolutionParser().parse(new File(SOLUTION_WITH_DUP_PATH + "Example.sln"));
+    List<VisualStudioSolutionProject> projects = solution.projects();
+    assertEquals(2, projects.size());
+    VisualStudioProject project1 = new VisualStudioProjectParser().parse(new File(SOLUTION_WITH_DUP_PATH + projects.get(0).path()));
+    VisualStudioProject project2 = new VisualStudioProjectParser().parse(new File(SOLUTION_WITH_DUP_PATH + projects.get(1).path()));
+  
+    assertFalse(project1.assemblyName().equals(project2.assemblyName()));
   }
+  
 
   @Test
   public void integTestPatterns() {
-    VisualStudioProject testProject = new VisualStudioProject();
-    testProject.setName("MyProjectTest");
-    VisualStudioProject secondTestProject = new VisualStudioProject();
-    secondTestProject.setName("MyProject.IT");
-    VisualStudioProject project = new VisualStudioProject();
-    project.setName("MyProject");
+    List<String> files = mock(List.class);
+    List<String> propertyGroupConditions = mock(List.class);
+    List<String> outputPaths = mock(List.class);
 
+    VisualStudioProject testProject = new VisualStudioProject(files, null, "MyProjectTest", propertyGroupConditions, outputPaths);
+    VisualStudioProject secondTestProject = new VisualStudioProject(files, null, "MyProject.IT", propertyGroupConditions, outputPaths);
+    VisualStudioProject project = new VisualStudioProject(files, null, "MyProject", propertyGroupConditions, outputPaths);
+    
     String unitPatterns = "*Test";
     String integPatterns = "*.IT";
-
-    ModelFactory.assessTestProject(project, unitPatterns, integPatterns);
-    ModelFactory.assessTestProject(testProject, unitPatterns, integPatterns);
-    ModelFactory.assessTestProject(secondTestProject, unitPatterns, integPatterns);
+    
+    project.assessTestProject(unitPatterns, integPatterns);
+    testProject.assessTestProject(unitPatterns, integPatterns);
+    secondTestProject.assessTestProject(unitPatterns, integPatterns);
     assertFalse(project.isTest());
     assertTrue(testProject.isTest());
     assertTrue(secondTestProject.isTest());
@@ -128,13 +129,6 @@ public class VSModelFactoryTest {
     assertTrue(secondTestProject.isIntegTest());
   }
 
-  @Test
-  public void testSolutionWithAssemblyNameDuplicates() throws Exception {
-    File file = new File(SOLUTION_WITH_DUP_PATH);
-    VisualStudioSolution solution = ModelFactory.getSolution(file);
-    List<VisualStudioProject> projects = solution.getProjects();
-    assertEquals(2, projects.size());
-    assertFalse(projects.get(0).getName().equals(projects.get(1).getName()));
-  }
+
 
 }

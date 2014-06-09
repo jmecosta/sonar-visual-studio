@@ -36,7 +36,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class VisualStudioProjectParser {
+  public static final String PROPERTYGROUP = "PropertyGroup";
+  public static final String ITEMGROUP = "ItemGroup";
+  static final Logger logger = LoggerFactory.getLogger(VisualStudioProjectParser.class);
 
   public VisualStudioProject parse(File file) {
     return new Parser().parse(file);
@@ -50,13 +56,16 @@ public class VisualStudioProjectParser {
     private String outputType;
     private String assemblyName;
     private String currentCondition;
+    private String currentElement;
     private final ImmutableList.Builder<String> propertyGroupConditionsBuilder = ImmutableList.builder();
     private final ImmutableList.Builder<String> outputPathsBuilder = ImmutableList.builder();
 
     public VisualStudioProject parse(File file) {
       this.file = file;
 
+      logger.debug("FileName = " + file.getPath());
       InputStreamReader reader = null;
+      currentElement = "";
       XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
 
       try {
@@ -64,21 +73,37 @@ public class VisualStudioProjectParser {
         stream = xmlFactory.createXMLStreamReader(reader);
 
         while (stream.hasNext()) {
+
           if (stream.next() == XMLStreamConstants.START_ELEMENT) {
             String tagName = stream.getLocalName();
-
-            if ("Compile".equals(tagName) || "ClCompile".equals(tagName)|| "ClInclude".equals(tagName)) {
+            logger.debug("tag = {} currentElement = {}", tagName, currentElement);
+            if (PROPERTYGROUP.equals(tagName)) {
+              currentElement = PROPERTYGROUP;
+              handlePropertyGroupTag();
+            } else if (ITEMGROUP.equals(tagName)) {
+              currentElement = ITEMGROUP;
+            } else if (currentElement.equals(ITEMGROUP) 
+                       && ("Compile".equals(tagName) 
+                       || "ClCompile".equals(tagName) 
+                       || "ClInclude".equals(tagName))) {
               handleCompileTag();
             } else if ("OutputType".equals(tagName)) {
               handleOutputTypeTag();
-            } else if ("AssemblyName".equals(tagName)) {
+            } else if (currentElement.equals(PROPERTYGROUP)
+                       && ("AssemblyName".equals(tagName)
+                       || "ProjectName".equals(tagName))) {
               handleAssemblyNameTag();
-            } else if ("PropertyGroup".equals(tagName)) {
-              handlePropertyGroupTag();
-            } else if ("OutputPath".equals(tagName)) {
+            } else if (currentElement.equals(PROPERTYGROUP)
+                       && ("OutputPath".equals(tagName)
+                       || "ConfigurationType".equals(tagName))) {
               handleOutputPathTag();
             }
+            // C++ "ItemDefinitionGroup" contains several preprocessor
+            // definitions related to PropertyGroup "Condition"
+            // ToDo: create list of definition for configurations e.g.
+            // '$(Configuration)|$(Platform)'=='Release|Win32'
           }
+//          logger.debug("eventXML = {} level = {}", eventXML, elementNesting);
         }
       } catch (IOException e) {
         throw Throwables.propagate(e);
@@ -91,6 +116,7 @@ public class VisualStudioProjectParser {
 
       return new VisualStudioProject(filesBuilder.build(), outputType, assemblyName, propertyGroupConditionsBuilder.build(), outputPathsBuilder.build());
     }
+    
 
     private void closeXmlStream() {
       if (stream != null) {
@@ -113,13 +139,19 @@ public class VisualStudioProjectParser {
 
     private void handleAssemblyNameTag() throws XMLStreamException {
       assemblyName = stream.getElementText();
+      logger.debug("Assembly Name = {}", assemblyName);
     }
 
     private void handlePropertyGroupTag() throws XMLStreamException {
       currentCondition = Strings.nullToEmpty(getAttribute("Condition"));
+      if (!currentCondition.isEmpty()) {
+        logger.debug("add Condition = {}", currentCondition);
+        // VC projects have additional attribute: Label="Configuration"
+      }
     }
 
     private void handleOutputPathTag() throws XMLStreamException {
+      // add condition to list if "OutputPath" element is found
       propertyGroupConditionsBuilder.add(currentCondition);
       outputPathsBuilder.add(stream.getElementText());
     }
@@ -129,7 +161,7 @@ public class VisualStudioProjectParser {
       if (value == null) {
         throw parseError("Missing attribute \"" + name + "\" in element <" + stream.getLocalName() + ">");
       }
-
+      logger.debug("RequiredAttribute = {}", value);
       return value;
     }
 
@@ -137,6 +169,7 @@ public class VisualStudioProjectParser {
     private String getAttribute(String name) {
       for (int i = 0; i < stream.getAttributeCount(); i++) {
         if (name.equals(stream.getAttributeLocalName(i))) {
+          logger.debug("attribute = {} value = {}", name, stream.getAttributeValue(i));
           return stream.getAttributeValue(i);
         }
       }

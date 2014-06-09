@@ -21,6 +21,9 @@ package org.sonar.plugins.visualstudio;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang.StringUtils;
+import org.sonar.api.utils.WildcardPattern;
+
 import java.util.List;
 
 /**
@@ -34,6 +37,8 @@ public class VisualStudioProject {
   private final String assemblyName;
   private final List<String> propertyGroupConditions;
   private final List<String> outputPaths;
+  private boolean unitTest;
+  private boolean integTest;
 
   public VisualStudioProject(List<String> files, @Nullable String outputType, @Nullable String assemblyName, List<String> propertyGroupConditions, List<String> outputPaths) {
     this.files = files;
@@ -41,6 +46,8 @@ public class VisualStudioProject {
     this.assemblyName = assemblyName;
     this.propertyGroupConditions = propertyGroupConditions;
     this.outputPaths = outputPaths;
+    this.unitTest = false;
+    this.integTest = false;
   }
 
   public List<String> files() {
@@ -65,4 +72,48 @@ public class VisualStudioProject {
     return outputPaths;
   }
 
+  public boolean isTest() {
+    return unitTest || integTest;
+  }
+
+  public boolean isUnitTest() {
+    return this.unitTest;
+  }
+
+  public boolean isIntegTest() {
+    return this.integTest;
+  }
+  
+  void setUnitTest(boolean test) {
+    this.unitTest = test;
+  }
+
+  void setIntegTest(boolean test) {
+    this.integTest = test;
+  }
+  
+  private boolean nameMatchPatterns(String testProjectPatterns) {
+    if (StringUtils.isEmpty(testProjectPatterns)) {
+      return false;
+    }
+    String[] patterns = StringUtils.split(testProjectPatterns, ";");
+    boolean testFlag = false;
+
+    for (int i = 0; i < patterns.length; i++) {
+      if (WildcardPattern.create(patterns[i]).match(this.assemblyName)) {
+        testFlag = true;
+        break;
+      }
+    }
+    return testFlag;
+  }
+  
+  public boolean assessTestProject(String  patternUT, String patternIT) {
+    boolean testFlag = nameMatchPatterns(patternUT);
+    setUnitTest(testFlag);
+    boolean integTestFlag = nameMatchPatterns(patternIT);
+    setIntegTest(integTestFlag);
+    return testFlag || integTestFlag;
+  }
+  
 }
