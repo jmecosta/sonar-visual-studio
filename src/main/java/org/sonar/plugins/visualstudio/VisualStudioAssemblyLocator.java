@@ -79,43 +79,55 @@ public class VisualStudioAssemblyLocator {
   String extension(File projectFile, String outputType) {
     String result;
 
-    if ("Library".equals(outputType)) {
+    if ("library".equals(outputType.toLowerCase())) {
       result = "dll";
-    } else if ("Exe".equals(outputType)) {
+    } else if ("exe".equals(outputType.toLowerCase())) {
       result = "exe";
-    } else if ("WinExe".equals(outputType)) {
+    } else if ("winexe".equals(outputType.toLowerCase())) {
       result = "exe";
     } else {
       result = null;
+      LOG.info("ProjectFile not Supported: " + projectFile + " : OutputType = " + outputType + " : Supported[Library, Exe, WinExe]");
     }
 
     return result;
   }
 
   private List<File> candidates(String assemblyFileName, File projectFile, VisualStudioProject project) {
-    String explicitOutputPath = settings.getString(VisualStudioPlugin.VISUAL_STUDIO_OUTPUT_PATH_PROPERTY_KEY);
-    if (explicitOutputPath != null) {
-      File candidate = new File(new File(explicitOutputPath.replace('\\', '/')), assemblyFileName);
-      LOG.info("Using the assembly output path specified using the property \"" + VisualStudioPlugin.VISUAL_STUDIO_OUTPUT_PATH_PROPERTY_KEY + "\" set to: " + explicitOutputPath);
-      return Lists.newArrayList(candidate);
-    }
-
-    List<File> candidates = Lists.newArrayList();
-    for (int i = 0; i < project.outputPaths().size(); i++) {
-      String outputPath = project.outputPaths().get(i);
-      File candidate = new File(projectFile.getParentFile(), outputPath.replace('\\', '/') + '/' + assemblyFileName);
-
-      if (!candidate.isFile()) {
-        LOG.info("The following candidate assembly was not built: " + candidate.getAbsolutePath());
-      } else if (matchesBuildConfigurationAndPlatform(project.propertyGroupConditions().get(i))) {
-        LOG.info("The following candidate assembly was found: " + candidate.getAbsolutePath());
-        candidates.add(candidate);
-      } else {
-        LOG.info("The following candidate assembly was found, but rejected because it does not match the request build configuration and platform: " + candidate.getAbsolutePath());
+    List<File> candidates = Lists.newArrayList();    
+    String data = settings.getString(VisualStudioPlugin.VISUAL_STUDIO_OUTPUT_PATH_PROPERTY_KEY);
+    if (data != null) {
+      String[] paths = data.split(",");
+      for(String path : paths)
+      {
+        File candidate = new File(new File(path.replace('\\', '/')), assemblyFileName);
+        LOG.info("Trying to Locate : " + candidate.getAbsolutePath());
+        if (candidate.isFile()) {
+          LOG.info("The following candidate assembly was found: " + candidate.getAbsolutePath());
+          candidates.add(candidate);
+        }
       }
-    }
+    } else {
+      for (int i = 0; i < project.outputPaths().size(); i++) {
+        String outputPath = project.outputPaths().get(i);
+        File candidate = new File(projectFile.getParentFile(), outputPath.replace('\\', '/') + '/' + assemblyFileName);
 
+        if (!candidate.isFile()) {
+          LOG.info("The following candidate assembly was not built: " + candidate.getAbsolutePath());
+        } else if (matchesBuildConfigurationAndPlatform(project.propertyGroupConditions().get(i))) {
+          LOG.info("The following candidate assembly was found: " + candidate.getAbsolutePath());
+          candidates.add(candidate);
+        } else {
+          LOG.info("The following candidate assembly was found, but rejected because it does not match the request build configuration and platform: " + candidate.getAbsolutePath());
+        }
+      }      
+    }
+    
     return candidates;
+  }
+
+  private void VerifyPresenceOfDll(File candidate, VisualStudioProject project, int i, List<File> candidates) {
+
   }
 
   private boolean matchesBuildConfigurationAndPlatform(String condition) {
