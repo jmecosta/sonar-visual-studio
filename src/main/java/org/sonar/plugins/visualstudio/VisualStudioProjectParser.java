@@ -85,7 +85,8 @@ public class VisualStudioProjectParser {
             } else if (currentElement.equals(ITEMGROUP) 
                        && ("Compile".equals(tagName) 
                        || "ClCompile".equals(tagName) 
-                       || "ClInclude".equals(tagName))) {
+                       || "ClInclude".equals(tagName)
+                       || "Page".equals(tagName))) {
               handleCompileTag();
             } else if ("OutputType".equals(tagName)) {
               handleOutputTypeTag();
@@ -127,7 +128,7 @@ public class VisualStudioProjectParser {
         }
       }
     }
-
+    
     private void handleCompileTag() {
       String include = getRequiredAttribute("Include");
       filesBuilder.add(include);
