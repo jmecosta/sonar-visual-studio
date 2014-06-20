@@ -50,14 +50,6 @@ public class VisualStudioProjectParserTest {
   }
 
   @Test
-  public void invalid() {
-    thrown.expectMessage("Missing attribute \"Include\" in element <Compile>");
-    thrown.expectMessage("at line 4");
-
-    new VisualStudioProjectParser().parse(new File("src/test/resources/VisualStudioProjectParserTest/invalid.csproj"));
-  }
-
-  @Test
   public void non_existing() {
     thrown.expectMessage("java.io.FileNotFoundException");
     thrown.expectMessage("non_existing.sln");

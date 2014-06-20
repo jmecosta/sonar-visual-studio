@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class VisualStudioProjectParser {
+  public static final String PROPERTYGROUP = "PropertyGroup";
+  public static final String ITEMGROUP = "ItemGroup";
 
   public VisualStudioProject parse(File file) {
     return new Parser().parse(file);
@@ -50,6 +52,7 @@ public class VisualStudioProjectParser {
     private String outputType;
     private String assemblyName;
     private String currentCondition;
+    private String currentElement;
     private final ImmutableList.Builder<String> propertyGroupConditionsBuilder = ImmutableList.builder();
     private final ImmutableList.Builder<String> outputPathsBuilder = ImmutableList.builder();
 
@@ -57,48 +60,40 @@ public class VisualStudioProjectParser {
       this.file = file;
 
       InputStreamReader reader = null;
+      currentElement = "";
       XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
 
       try {
         reader = new InputStreamReader(new FileInputStream(file), Charsets.UTF_8);
         stream = xmlFactory.createXMLStreamReader(reader);
 
-        boolean inItemGroup = false;
-        int inItemGroupNestingLevel = 0;
-
         while (stream.hasNext()) {
           int next = stream.next();
           if (next == XMLStreamConstants.START_ELEMENT) {
             String tagName = stream.getLocalName();
-
-            if (inItemGroup && inItemGroupNestingLevel == 0 && "Compile".equals(tagName)) {
+            if (PROPERTYGROUP.equals(tagName)) {
+              currentElement = PROPERTYGROUP;
+              handlePropertyGroupTag();
+            } else if (ITEMGROUP.equals(tagName)) {
+              currentElement = ITEMGROUP;
+            } else if (currentElement.equals(ITEMGROUP)
+                       && ("Compile".equals(tagName)
+                       || "ClCompile".equals(tagName)
+                       || "ClInclude".equals(tagName))) {
               handleCompileTag();
             } else if ("OutputType".equals(tagName)) {
               handleOutputTypeTag();
-            } else if ("AssemblyName".equals(tagName)) {
+            } else if (currentElement.equals(PROPERTYGROUP)
+                       && ("AssemblyName".equals(tagName)
+                       || "ProjectName".equals(tagName))) {
               handleAssemblyNameTag();
-            } else if ("PropertyGroup".equals(tagName)) {
-              handlePropertyGroupTag();
-            } else if ("OutputPath".equals(tagName)) {
+            } else if (currentElement.equals(PROPERTYGROUP)
+                       && ("OutputPath".equals(tagName)
+                       || "ConfigurationType".equals(tagName))) {
               handleOutputPathTag();
-            }
-
-            if ("ItemGroup".equals(tagName)) {
-              inItemGroup = true;
-              inItemGroupNestingLevel = 0;
-            } else if (inItemGroup) {
-              inItemGroupNestingLevel++;
-            }
-          } else if (next == XMLStreamConstants.END_ELEMENT) {
-            String tagName = stream.getLocalName();
-
-            if ("ItemGroup".equals(tagName)) {
-              inItemGroup = false;
-            } else if (inItemGroup) {
-              inItemGroupNestingLevel--;
+              }
             }
           }
-        }
       } catch (IOException e) {
         throw Throwables.propagate(e);
       } catch (XMLStreamException e) {
@@ -123,7 +118,9 @@ public class VisualStudioProjectParser {
 
     private void handleCompileTag() {
       String include = getRequiredAttribute("Include");
-      filesBuilder.add(include);
+      if (include != null) {
+        filesBuilder.add(include);
+      }
     }
 
     private void handleOutputTypeTag() throws XMLStreamException {
@@ -136,6 +133,8 @@ public class VisualStudioProjectParser {
 
     private void handlePropertyGroupTag() throws XMLStreamException {
       currentCondition = Strings.nullToEmpty(getAttribute("Condition"));
+      if (!currentCondition.isEmpty()) {
+      }
     }
 
     private void handleOutputPathTag() throws XMLStreamException {
@@ -145,8 +144,7 @@ public class VisualStudioProjectParser {
 
     private String getRequiredAttribute(String name) {
       String value = getAttribute(name);
-      if (value == null) {
-        throw parseError("Missing attribute \"" + name + "\" in element <" + stream.getLocalName() + ">");
+      if (value != null) {
       }
 
       return value;
@@ -161,20 +159,6 @@ public class VisualStudioProjectParser {
       }
 
       return null;
-    }
-
-    private ParseErrorException parseError(String message) {
-      return new ParseErrorException(message + " in " + file.getAbsolutePath() + " at line " + stream.getLocation().getLineNumber());
-    }
-
-  }
-
-  private static class ParseErrorException extends RuntimeException {
-
-    private static final long serialVersionUID = 1L;
-
-    public ParseErrorException(String message) {
-      super(message);
     }
 
   }
