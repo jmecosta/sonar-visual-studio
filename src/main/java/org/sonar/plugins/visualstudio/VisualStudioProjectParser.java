@@ -35,6 +35,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
 
 public class VisualStudioProjectParser {
 
@@ -58,6 +60,7 @@ public class VisualStudioProjectParser {
 
       InputStreamReader reader = null;
       XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+      List<String> projectItemTypes = Arrays.asList("Compile", "Content", "EmbeddedResource");
 
       try {
         reader = new InputStreamReader(new FileInputStream(file), Charsets.UTF_8);
@@ -71,8 +74,8 @@ public class VisualStudioProjectParser {
           if (next == XMLStreamConstants.START_ELEMENT) {
             String tagName = stream.getLocalName();
 
-            if (inItemGroup && inItemGroupNestingLevel == 0 && "Compile".equals(tagName)) {
-              handleCompileTag();
+            if (inItemGroup && inItemGroupNestingLevel == 0 && projectItemTypes.contains(tagName)) {
+              handleProjectItemTag();
             } else if ("OutputType".equals(tagName)) {
               handleOutputTypeTag();
             } else if ("AssemblyName".equals(tagName)) {
@@ -121,7 +124,7 @@ public class VisualStudioProjectParser {
       }
     }
 
-    private void handleCompileTag() {
+    private void handleProjectItemTag() {
       String include = getRequiredAttribute("Include");
       filesBuilder.add(include);
     }
