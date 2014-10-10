@@ -128,6 +128,12 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
 
     boolean isTestProject = isTestProject(projectName);
 
+    if (isTestProject) {
+      module.setTestDirs(projectFile.getParentFile());
+    } else {
+      module.setSourceDirs(projectFile.getParentFile());
+    }
+
     for (String filePath : project.files()) {
       File file = relativePathFile(projectFile.getParentFile(), filePath);
       if (!file.isFile()) {
@@ -136,7 +142,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
         LOG.warn("Skipping the file " + file.getAbsolutePath() + " of project " + projectName + " located outside of the source directory.");
       } else {
         if (isTestProject) {
-          module.addTestFiles(file);
+          module.addTestFiles(file.getAbsolutePath());
         } else {
           module.addSourceFiles(file);
         }

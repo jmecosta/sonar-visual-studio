@@ -89,7 +89,9 @@ public class VisualStudioProjectBuilderTest {
     assertThat(libraryProject.getVersion()).isNull();
 
     assertThat(libraryProject.getBaseDir().getAbsoluteFile()).isEqualTo(new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/MyLibrary/").getAbsoluteFile());
-    assertThat(libraryProject.getSourceDirs()).isEmpty();
+    assertThat(libraryProject.getSourceDirs()).hasSize(1);
+    assertThat(new File(libraryProject.getSourceDirs().get(0)).getAbsoluteFile())
+      .isEqualTo(new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/MyLibrary/").getAbsoluteFile());
     assertThat(libraryProject.getTestDirs()).isEmpty();
     assertThat(libraryProject.getBaseDir().getAbsoluteFile()).isEqualTo(new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/MyLibrary/").getAbsoluteFile());
     assertThat(libraryProject.getWorkDir()).isEqualTo(new File(workingDir, "solution_key_MyLibrary"));
@@ -122,7 +124,9 @@ public class VisualStudioProjectBuilderTest {
     assertThat(libraryTestProject.getBaseDir().getAbsoluteFile())
       .isEqualTo(new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/MyLibraryTest/").getAbsoluteFile());
     assertThat(libraryTestProject.getSourceDirs()).isEmpty();
-    assertThat(libraryTestProject.getTestDirs()).isEmpty();
+    assertThat(libraryTestProject.getTestDirs()).hasSize(1);
+    assertThat(new File(libraryTestProject.getTestDirs().get(0)).getAbsoluteFile())
+      .isEqualTo(new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/MyLibraryTest/").getAbsoluteFile());
     assertThat(libraryTestProject.getWorkDir()).isEqualTo(new File(workingDir, "solution_key_MyLibraryTest"));
 
     assertThat(libraryTestProject.getSourceFiles()).isEmpty();
