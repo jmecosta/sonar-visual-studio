@@ -128,12 +128,6 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
 
     boolean isTestProject = isTestProject(projectName);
 
-    if (isTestProject) {
-      module.setTestDirs(projectFile.getParentFile());
-    } else {
-      module.setSourceDirs(projectFile.getParentFile());
-    }
-
     for (String filePath : project.files()) {
       File file = relativePathFile(projectFile.getParentFile(), filePath);
       if (!file.isFile()) {
