@@ -111,7 +111,8 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
   private boolean isSupportedProjectType(VisualStudioSolutionProject project) {
     String path = project.path().toLowerCase();
     return path.endsWith(".csproj") ||
-      path.endsWith(".vbproj");
+      path.endsWith(".vbproj") ||
+      path.endsWith(".vcxproj");
   }
 
   private void buildModule(ProjectDefinition solutionProject, String projectName, File projectFile, VisualStudioProject project, VisualStudioAssemblyLocator assemblyLocator,

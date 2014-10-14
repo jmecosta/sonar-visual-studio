@@ -361,7 +361,7 @@ public class VisualStudioProjectBuilderTest {
 
     new VisualStudioProjectBuilder(settings).build(context);
 
-    verify(solutionProject, Mockito.times(2)).addSubProject(Mockito.any(ProjectDefinition.class));
+    verify(solutionProject, Mockito.times(3)).addSubProject(Mockito.any(ProjectDefinition.class));
   }
 
   private static Context mockContext(String key, File baseDir) {
