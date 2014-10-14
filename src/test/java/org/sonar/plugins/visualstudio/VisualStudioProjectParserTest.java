@@ -42,7 +42,8 @@ public class VisualStudioProjectParserTest {
       "Properties\\AssemblyInfo.cs",
       "Content\\bootstrap.css",
       "Project_Readme.html",
-      "Source.cpp");
+      "Source.cpp",
+      "UserControl1.xaml");
     assertThat(project.outputType()).isEqualTo("Library");
     assertThat(project.assemblyName()).isEqualTo("MyLibrary");
     assertThat(project.propertyGroupConditions()).containsExactly(

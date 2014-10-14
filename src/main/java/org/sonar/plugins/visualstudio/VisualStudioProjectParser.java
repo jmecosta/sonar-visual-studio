@@ -46,7 +46,7 @@ public class VisualStudioProjectParser {
 
   private static class Parser {
 
-    private static final Set<String> PROJECT_ITEM_TYPES = ImmutableSet.of("Compile", "Content", "EmbeddedResource", "None", "ClCompile");
+    private static final Set<String> PROJECT_ITEM_TYPES = ImmutableSet.of("Compile", "Content", "EmbeddedResource", "None", "ClCompile", "Page");
 
     private File file;
     private XMLStreamReader stream;

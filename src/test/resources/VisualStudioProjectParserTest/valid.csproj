@@ -54,6 +54,7 @@
     <EmbeddedResource Include="Content\bootstrap.css" />
     <None Include="Project_Readme.html" />
     <ClCompile Include="Source.cpp" /> <!-- C++ -->
+    <Page Include="UserControl1.xaml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
