@@ -23,6 +23,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closeables;
 
 import javax.annotation.Nullable;
@@ -35,8 +36,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 public class VisualStudioProjectParser {
 
@@ -45,6 +45,8 @@ public class VisualStudioProjectParser {
   }
 
   private static class Parser {
+
+    private static final Set<String> PROJECT_ITEM_TYPES = ImmutableSet.of("Compile", "Content", "EmbeddedResource", "None");
 
     private File file;
     private XMLStreamReader stream;
@@ -60,7 +62,6 @@ public class VisualStudioProjectParser {
 
       InputStreamReader reader = null;
       XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
-      List<String> projectItemTypes = Arrays.asList("Compile", "Content", "EmbeddedResource");
 
       try {
         reader = new InputStreamReader(new FileInputStream(file), Charsets.UTF_8);
@@ -74,7 +75,7 @@ public class VisualStudioProjectParser {
           if (next == XMLStreamConstants.START_ELEMENT) {
             String tagName = stream.getLocalName();
 
-            if (inItemGroup && inItemGroupNestingLevel == 0 && projectItemTypes.contains(tagName)) {
+            if (inItemGroup && inItemGroupNestingLevel == 0 && PROJECT_ITEM_TYPES.contains(tagName)) {
               handleProjectItemTag();
             } else if ("OutputType".equals(tagName)) {
               handleOutputTypeTag();

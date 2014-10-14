@@ -40,7 +40,8 @@ public class VisualStudioProjectParserTest {
       "Adder.cs",
       "bootstrap.scss",
       "Properties\\AssemblyInfo.cs",
-      "Content\\bootstrap.css");
+      "Content\\bootstrap.css",
+      "Project_Readme.html");
     assertThat(project.outputType()).isEqualTo("Library");
     assertThat(project.assemblyName()).isEqualTo("MyLibrary");
     assertThat(project.propertyGroupConditions()).containsExactly(
