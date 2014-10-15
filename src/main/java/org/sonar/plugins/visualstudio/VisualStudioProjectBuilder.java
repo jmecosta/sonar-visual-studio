@@ -130,8 +130,10 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     boolean isTestProject = isTestProject(projectName);
 
     if (isTestProject) {
+      LOG.info("Adding the Visual Studio test project: " + projectName);
       module.setTestDirs(projectFile.getParentFile());
     } else {
+      LOG.info("Adding the Visual Studio project: " + projectName);
       module.setSourceDirs(projectFile.getParentFile());
     }
 
