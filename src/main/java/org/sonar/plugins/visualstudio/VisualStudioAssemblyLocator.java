@@ -46,9 +46,9 @@ public class VisualStudioAssemblyLocator {
   }
 
   public File locateAssembly(String projectName, File projectFile, VisualStudioProject project) {
-    LOG.info("Locating the assembly for the project: " + projectName + "...");
+    LOG.debug("Locating the assembly for the project " + projectName + "... " + projectFile.getAbsolutePath());
     if (project.outputType() == null || project.assemblyName() == null) {
-      LOG.info("Unable to locate the assembly as either the output type or the assembly name is missing.");
+      LOG.warn("Unable to locate the assembly as either the output type or the assembly name is missing.");
       return null;
     }
 
@@ -62,14 +62,15 @@ public class VisualStudioAssemblyLocator {
     List<File> candidates = candidates(assemblyFileName, projectFile, project);
 
     if (candidates.isEmpty()) {
-      LOG.warn("Unable to locate the assembly of project " + projectFile.getAbsolutePath());
+      LOG.warn("Unable to locate the assembly of project " + projectName);
       return null;
     }
 
     Collections.sort(candidates, FILE_LAST_MODIFIED_COMPARATOR);
 
-    if (candidates.size() > 1) {
-      LOG.info("Picking the most recently generated assembly file: " + candidates.get(0).getAbsolutePath());
+    if (candidates.size() == 1) {
+      String title = candidates.size() == 1 ? "Using the the following assembly for project " : "Using the most recently generated assembly for project ";
+      LOG.info(title + projectName + ": " + candidates.get(0).getAbsolutePath());
     }
 
     return candidates.get(0);
@@ -113,9 +114,9 @@ public class VisualStudioAssemblyLocator {
         File candidate = new File(projectFile.getParentFile(), outputPath.replace('\\', '/') + '/' + assemblyFileName);
 
         if (!candidate.isFile()) {
-          LOG.info("The following candidate assembly was not built: " + candidate.getAbsolutePath());
+          LOG.debug("The following candidate assembly was not built: " + candidate.getAbsolutePath());
         } else if (matchesBuildConfigurationAndPlatform(project.propertyGroupConditions().get(i))) {
-          LOG.info("The following candidate assembly was found: " + candidate.getAbsolutePath());
+          LOG.debug("The following candidate assembly was found: " + candidate.getAbsolutePath());
           candidates.add(candidate);
         } else {
           LOG.info("The following candidate assembly was found, but rejected because it does not match the request build configuration and platform: "
