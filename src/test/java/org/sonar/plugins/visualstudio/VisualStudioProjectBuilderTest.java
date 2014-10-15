@@ -312,6 +312,7 @@ public class VisualStudioProjectBuilderTest {
     assertThat(VisualStudioProjectBuilder.escapeProjectName("foo")).isEqualTo("foo");
     assertThat(VisualStudioProjectBuilder.escapeProjectName("héhé")).isEqualTo("hehe");
     assertThat(VisualStudioProjectBuilder.escapeProjectName("über")).isEqualTo("uber");
+    assertThat(VisualStudioProjectBuilder.escapeProjectName("c++")).isEqualTo("c__");
   }
 
   @Test

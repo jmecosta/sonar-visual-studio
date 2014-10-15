@@ -241,6 +241,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     String escaped = Normalizer.normalize(projectName, Normalizer.Form.NFD);
     escaped = escaped.replaceAll("\\p{M}", "");
     escaped = escaped.replace(' ', '_');
+    escaped = escaped.replace('+', '_');
     return escaped;
   }
 
