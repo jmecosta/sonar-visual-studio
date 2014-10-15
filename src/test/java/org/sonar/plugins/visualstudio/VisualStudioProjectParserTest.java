@@ -65,9 +65,17 @@ public class VisualStudioProjectParserTest {
   @Test
   public void non_existing() {
     thrown.expectMessage("java.io.FileNotFoundException");
-    thrown.expectMessage("non_existing.sln");
+    thrown.expectMessage("non_existing.csproj");
 
-    new VisualStudioProjectParser().parse(new File("src/test/resources/VisualStudioProjectParserTest/non_existing.sln"));
+    new VisualStudioProjectParser().parse(new File("src/test/resources/VisualStudioProjectParserTest/non_existing.csproj"));
+  }
+
+  @Test
+  public void non_xml() {
+    thrown.expectMessage("Error while parsing the Visual Studio project file: ");
+    thrown.expectMessage("non_xml.csproj");
+
+    new VisualStudioProjectParser().parse(new File("src/test/resources/VisualStudioProjectParserTest/non_xml.csproj"));
   }
 
 }

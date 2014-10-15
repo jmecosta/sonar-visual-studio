@@ -25,6 +25,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closeables;
+import org.sonar.api.utils.SonarException;
 
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLInputFactory;
@@ -106,7 +107,7 @@ public class VisualStudioProjectParser {
       } catch (IOException e) {
         throw Throwables.propagate(e);
       } catch (XMLStreamException e) {
-        throw Throwables.propagate(e);
+        throw new SonarException("Error while parsing the Visual Studio project file: " + file.getAbsolutePath(), e);
       } finally {
         closeXmlStream();
         Closeables.closeQuietly(reader);
