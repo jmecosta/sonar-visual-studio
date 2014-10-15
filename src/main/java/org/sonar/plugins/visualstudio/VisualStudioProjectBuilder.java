@@ -46,6 +46,7 @@ import java.util.regex.PatternSyntaxException;
 public class VisualStudioProjectBuilder extends ProjectBuilder {
 
   private static final String SONAR_MODULES_PROPERTY_KEY = "sonar.modules";
+  private static final String WEB_APPLICATION_PROJECT_TYPE_GUID = "{349C5851-65DF-11DA-9384-00065B846F21}";
   private static final Logger LOG = LoggerFactory.getLogger(VisualStudioProjectBuilder.class);
 
   private final Settings settings;
@@ -169,8 +170,17 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
       return;
     }
 
+    if (isWebApplication(project)) {
+      module.setProperty("sonar.cs.fxcop.aspnet", "true");
+    }
+
     module.setProperty("sonar.cs.fxcop.assembly", assembly.getAbsolutePath());
     module.setProperty("sonar.vbnet.fxcop.assembly", assembly.getAbsolutePath());
+  }
+
+  private boolean isWebApplication(VisualStudioProject project) {
+    return project.projectTypeGuids() != null &&
+      project.projectTypeGuids().toUpperCase().contains(WEB_APPLICATION_PROJECT_TYPE_GUID);
   }
 
   private void setReSharperProperties(ProjectDefinition module, String projectName, File solutionFile) {

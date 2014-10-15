@@ -52,6 +52,7 @@ public class VisualStudioProjectParser {
     private File file;
     private XMLStreamReader stream;
     private final ImmutableList.Builder<String> filesBuilder = ImmutableList.builder();
+    private String projectTypeGuids;
     private String outputType;
     private String assemblyName;
     private String currentCondition;
@@ -78,6 +79,8 @@ public class VisualStudioProjectParser {
 
             if (inItemGroup && inItemGroupNestingLevel == 0 && PROJECT_ITEM_TYPES.contains(tagName)) {
               handleProjectItemTag();
+            } else if ("ProjectTypeGuids".equals(tagName)) {
+              handleProjectTypeGuids();
             } else if ("OutputType".equals(tagName)) {
               handleOutputTypeTag();
             } else if ("AssemblyName".equals(tagName)) {
@@ -113,7 +116,7 @@ public class VisualStudioProjectParser {
         Closeables.closeQuietly(reader);
       }
 
-      return new VisualStudioProject(filesBuilder.build(), outputType, assemblyName, propertyGroupConditionsBuilder.build(), outputPathsBuilder.build());
+      return new VisualStudioProject(filesBuilder.build(), projectTypeGuids, outputType, assemblyName, propertyGroupConditionsBuilder.build(), outputPathsBuilder.build());
     }
 
     private void closeXmlStream() {
@@ -129,6 +132,10 @@ public class VisualStudioProjectParser {
     private void handleProjectItemTag() {
       String include = getRequiredAttribute("Include");
       filesBuilder.add(include);
+    }
+
+    private void handleProjectTypeGuids() throws XMLStreamException {
+      projectTypeGuids = stream.getElementText();
     }
 
     private void handleOutputTypeTag() throws XMLStreamException {

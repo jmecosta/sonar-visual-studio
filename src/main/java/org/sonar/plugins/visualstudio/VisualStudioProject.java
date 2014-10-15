@@ -30,13 +30,16 @@ import java.util.List;
 public class VisualStudioProject {
 
   private final List<String> files;
+  private final String projectTypeGuids;
   private final String outputType;
   private final String assemblyName;
   private final List<String> propertyGroupConditions;
   private final List<String> outputPaths;
 
-  public VisualStudioProject(List<String> files, @Nullable String outputType, @Nullable String assemblyName, List<String> propertyGroupConditions, List<String> outputPaths) {
+  public VisualStudioProject(List<String> files, @Nullable String projectTypeGuids, @Nullable String outputType, @Nullable String assemblyName,
+    List<String> propertyGroupConditions, List<String> outputPaths) {
     this.files = files;
+    this.projectTypeGuids = projectTypeGuids;
     this.outputType = outputType;
     this.assemblyName = assemblyName;
     this.propertyGroupConditions = propertyGroupConditions;
@@ -45,6 +48,11 @@ public class VisualStudioProject {
 
   public List<String> files() {
     return files;
+  }
+
+  @Nullable
+  public String projectTypeGuids() {
+    return projectTypeGuids;
   }
 
   @Nullable

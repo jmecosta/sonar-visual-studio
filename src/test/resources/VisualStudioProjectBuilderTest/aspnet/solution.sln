@@ -1,0 +1,14 @@
+
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}")=  "WebApp", "WebApp\WebApp.csproj", "{3A865091-31FB-4454-8AC4-3B2467019A49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonWebApp", "NonWebApp\NonWebApp.csproj", "{E61F0D12-F397-45B3-93A5-C9EE50460B3A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{28BA222B-2BD4-4199-B7C9-499C7D56D254}"
+    ProjectSection(SolutionItems) = preProject
+        solution.vsmdi = solution.vsmdi
+        Local.testsettings = Local.testsettings
+        TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
+    EndProjectSection
+EndProject

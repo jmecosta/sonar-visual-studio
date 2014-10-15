@@ -387,6 +387,32 @@ public class VisualStudioProjectBuilderTest {
     verify(solutionProject, Mockito.times(3)).addSubProject(Mockito.any(ProjectDefinition.class));
   }
 
+  @Test
+  public void should_pass_the_aspnet_flag_to_web_application_projects() {
+    Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/aspnet/"));
+    ProjectDefinition solutionProject = context.projectReactor().getRoot();
+
+    Settings settings = new Settings();
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY, true);
+
+    File assemblyFile = mock(File.class);
+    when(assemblyFile.getAbsolutePath()).thenReturn("c:/Assembly.dll");
+
+    VisualStudioAssemblyLocator assemblyLocator = mock(VisualStudioAssemblyLocator.class);
+    when(assemblyLocator.locateAssembly(Mockito.anyString(), Mockito.any(File.class), Mockito.any(VisualStudioProject.class))).thenReturn(assemblyFile);
+
+    new VisualStudioProjectBuilder(settings).build(context, assemblyLocator);
+
+    ArgumentCaptor<ProjectDefinition> subModules = ArgumentCaptor.forClass(ProjectDefinition.class);
+    verify(solutionProject, Mockito.times(2)).addSubProject(subModules.capture());
+
+    ProjectDefinition webAppProject = subModules.getAllValues().get(0);
+    assertThat(webAppProject.getProperties().get("sonar.cs.fxcop.aspnet")).isEqualTo("true");
+
+    ProjectDefinition nonWebAppProject = subModules.getAllValues().get(1);
+    assertThat(nonWebAppProject.getProperties().get("sonar.cs.fxcop.aspnet")).isNull();
+  }
+
   private static Context mockContext(String key, File baseDir) {
     ProjectDefinition project = mock(ProjectDefinition.class);
     when(project.getKey()).thenReturn(key);

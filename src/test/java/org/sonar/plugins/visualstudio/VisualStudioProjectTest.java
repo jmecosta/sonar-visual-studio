@@ -34,15 +34,17 @@ public class VisualStudioProjectTest {
     List<String> propertyGroupConditions = mock(List.class);
     List<String> outputPaths = mock(List.class);
 
-    VisualStudioProject project = new VisualStudioProject(files, "Library", null, propertyGroupConditions, outputPaths);
+    VisualStudioProject project = new VisualStudioProject(files, "{guid}", "Library", null, propertyGroupConditions, outputPaths);
 
     assertThat(project.files()).isSameAs(files);
+    assertThat(project.projectTypeGuids()).isEqualTo("{guid}");
     assertThat(project.outputType()).isEqualTo("Library");
     assertThat(project.assemblyName()).isNull();
     assertThat(project.propertyGroupConditions()).isSameAs(propertyGroupConditions);
     assertThat(project.outputPaths()).isSameAs(outputPaths);
 
-    project = new VisualStudioProject(files, null, "MyLibrary", propertyGroupConditions, outputPaths);
+    project = new VisualStudioProject(files, null, null, "MyLibrary", propertyGroupConditions, outputPaths);
+    assertThat(project.projectTypeGuids()).isNull();
     assertThat(project.outputType()).isNull();
     assertThat(project.assemblyName()).isEqualTo("MyLibrary");
   }
