@@ -328,22 +328,44 @@ public class VisualStudioProjectBuilderTest {
   }
 
   @Test
-  public void should_skip_projects() {
+  public void should_support_skipped_project_pattern() {
     Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/accents/"));
     ProjectDefinition solutionProject = context.projectReactor().getRoot();
 
     Settings settings = new Settings();
     settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY, true);
-    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECTS, ",,uber,");
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN, ".*ber");
 
     new VisualStudioProjectBuilder(settings).build(context);
 
     verify(solutionProject, Mockito.times(1)).addSubProject(Mockito.any(ProjectDefinition.class));
 
     context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/accents/"));
-    solutionProject = context.projectReactor().getRoot();
 
-    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECTS, ",,uber,foo_bar");
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN, ".*");
+
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("No Visual Studio projects were found.");
+
+    new VisualStudioProjectBuilder(settings).build(context);
+  }
+
+  @Test
+  public void should_support_deprecated_skipped_projects_property() {
+    Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/accents/"));
+    ProjectDefinition solutionProject = context.projectReactor().getRoot();
+
+    Settings settings = new Settings();
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY, true);
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS, ",,uber,");
+
+    new VisualStudioProjectBuilder(settings).build(context);
+
+    verify(solutionProject, Mockito.times(1)).addSubProject(Mockito.any(ProjectDefinition.class));
+
+    context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/accents/"));
+
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS, ",,uber,foo_bar");
 
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("No Visual Studio projects were found.");

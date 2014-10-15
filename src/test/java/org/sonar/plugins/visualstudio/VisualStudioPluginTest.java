@@ -39,8 +39,9 @@ public class VisualStudioPluginTest {
       "sonar.visualstudio.enable",
       "sonar.visualstudio.outputPaths",
       "sonar.visualstudio.testProjectPattern",
-      "sonar.visualstudio.skippedProjects",
+      "sonar.visualstudio.skippedProjectPattern",
 
+      "sonar.visualstudio.skippedProjects",
       "sonar.dotnet.visualstudio.solution.file",
       "sonar.dotnet.buildConfiguration",
       "sonar.dotnet.buildPlatform");

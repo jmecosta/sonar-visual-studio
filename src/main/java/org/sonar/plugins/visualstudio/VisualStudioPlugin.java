@@ -33,8 +33,9 @@ public class VisualStudioPlugin extends SonarPlugin {
   public static final String VISUAL_STUDIO_ENABLE_PROPERTY_KEY = "sonar.visualstudio.enable";
   public static final String VISUAL_STUDIO_OUTPUT_PATHS_PROPERTY_KEY = "sonar.visualstudio.outputPaths";
   public static final String VISUAL_STUDIO_TEST_PROJECT_PATTERN = "sonar.visualstudio.testProjectPattern";
-  public static final String VISUAL_STUDIO_SKIPPED_PROJECTS = "sonar.visualstudio.skippedProjects";
+  public static final String VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN = "sonar.visualstudio.skippedProjectPattern";
 
+  public static final String VISUAL_STUDIO_OLD_SKIPPED_PROJECTS = "sonar.visualstudio.skippedProjects";
   public static final String VISUAL_STUDIO_OLD_OUTPUT_PATH_PROPERTY_KEY = "sonar.visualstudio.outputPath";
   public static final String VISUAL_STUDIO_OLD_SOLUTION_PROPERTY_KEY = "sonar.dotnet.visualstudio.solution.file";
   public static final String VISUAL_STUDIO_OLD_BUILD_CONFIGURATION_PROPERTY_KEY = "sonar.dotnet.buildConfiguration";
@@ -84,14 +85,15 @@ public class VisualStudioPlugin extends SonarPlugin {
         .onQualifiers(Qualifiers.PROJECT)
         .build(),
       PropertyDefinition
-        .builder(VISUAL_STUDIO_SKIPPED_PROJECTS)
+        .builder(VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN)
         .category(CATEGORY)
-        .name("Projects to skip")
+        .name("Skipped project pattern")
         .defaultValue("")
-        .description("Comma-separated list of project names to skip.")
+        .description("Regular expression matched by skipped project names.")
         .onlyOnQualifiers(Qualifiers.PROJECT)
         .build(),
 
+      deprecatedPropertyDefinition(VISUAL_STUDIO_OLD_SKIPPED_PROJECTS),
       deprecatedPropertyDefinition(VISUAL_STUDIO_OLD_SOLUTION_PROPERTY_KEY),
       deprecatedPropertyDefinition(VISUAL_STUDIO_OLD_BUILD_CONFIGURATION_PROPERTY_KEY),
       deprecatedPropertyDefinition(VISUAL_STUDIO_OLD_BUILD_PLATFORM_PROPERTY_KEY));

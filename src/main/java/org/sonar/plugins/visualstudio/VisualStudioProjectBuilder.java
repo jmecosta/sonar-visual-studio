@@ -39,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.Normalizer;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.PatternSyntaxException;
@@ -82,7 +81,6 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
 
     solutionProject.resetSourceDirs();
 
-    Set<String> skippedProjects = skippedProjects();
     boolean hasModules = false;
 
     VisualStudioSolution solution = new VisualStudioSolutionParser().parse(solutionFile);
@@ -92,8 +90,8 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
 
       if (!isSupportedProjectType(project)) {
         LOG.info("Skipping the unsupported project type: " + project.path());
-      } else if (skippedProjects.contains(escapeProjectName(escapedProjectName))) {
-        LOG.info("Skipping the project \"" + escapedProjectName + "\" because it is listed in the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECTS + "\".");
+      } else if (isSkippedProject(project.name(), escapedProjectName)) {
+        LOG.info("Skipping the project \"" + escapedProjectName + "\" because it is matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
       } else {
         File projectFile = relativePathFile(solutionFile.getParentFile(), project.path());
         if (!projectFile.isFile()) {
@@ -247,19 +245,37 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
   }
 
   private boolean isTestProject(String projectName) {
-    String testProjectPattern = settings.getString(VisualStudioPlugin.VISUAL_STUDIO_TEST_PROJECT_PATTERN);
+    return matchesPropertyRegex(VisualStudioPlugin.VISUAL_STUDIO_TEST_PROJECT_PATTERN, projectName);
+  }
+
+  private boolean isSkippedProject(String projectName, String escapedProjectName) {
+    boolean result = matchesPropertyRegex(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN, projectName);
+    if (!result) {
+      result = skippedProjects().contains(escapedProjectName);
+    }
+    return result;
+  }
+
+  private boolean matchesPropertyRegex(String propertyKey, String value) {
+    String pattern = settings.getString(propertyKey);
     try {
-      return testProjectPattern != null && projectName.matches(testProjectPattern);
+      return pattern != null && value.matches(pattern);
     } catch (PatternSyntaxException e) {
-      LOG.error("The syntax of the regular expression of the \"" + VisualStudioPlugin.VISUAL_STUDIO_TEST_PROJECT_PATTERN + "\" property is invalid: " + testProjectPattern);
+      LOG.error("The syntax of the regular expression of the \"" + propertyKey + "\" property is invalid: " + pattern);
       throw Throwables.propagate(e);
     }
   }
 
   private Set<String> skippedProjects() {
-    String skippedProjects = settings.getString(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECTS);
-    return skippedProjects == null ?
-      Collections.<String>emptySet() : ImmutableSet.<String>builder().addAll(Splitter.on(',').omitEmptyStrings().split(skippedProjects)).build();
+    String skippedProjects = settings.getString(VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS);
+    if (skippedProjects == null) {
+      return ImmutableSet.of();
+    }
+
+    LOG.warn("Replace the deprecated property \"" + VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS + "\" by the new \""
+      + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
+
+    return ImmutableSet.<String>builder().addAll(Splitter.on(',').omitEmptyStrings().split(skippedProjects)).build();
   }
 
 }
