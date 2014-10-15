@@ -91,7 +91,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
       if (!isSupportedProjectType(project)) {
         LOG.info("Skipping the unsupported project type: " + project.path());
       } else if (isSkippedProject(project.name(), escapedProjectName)) {
-        LOG.info("Skipping the project \"" + escapedProjectName + "\" because it is matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
+        LOG.info("Skipping the project \"" + escapedProjectName + "\" because it matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
       } else {
         File projectFile = relativePathFile(solutionFile.getParentFile(), project.path());
         if (!projectFile.isFile()) {
