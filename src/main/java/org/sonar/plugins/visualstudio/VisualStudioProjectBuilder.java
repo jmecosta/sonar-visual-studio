@@ -128,12 +128,11 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     module.setWorkDir(new File(solutionProject.getWorkDir(), solutionProject.getKey().replace(':', '_') + "_" + escapedProjectName));
 
     boolean isTestProject = isTestProject(projectName);
+    LOG.info("Adding the Visual Studio " + (isTestProject ? "test " : "") + "project: " + projectName + "... " + projectFile.getAbsolutePath());
 
     if (isTestProject) {
-      LOG.info("Adding the Visual Studio test project: " + projectName);
       module.setTestDirs(projectFile.getParentFile());
     } else {
-      LOG.info("Adding the Visual Studio project: " + projectName);
       module.setSourceDirs(projectFile.getParentFile());
     }
 
