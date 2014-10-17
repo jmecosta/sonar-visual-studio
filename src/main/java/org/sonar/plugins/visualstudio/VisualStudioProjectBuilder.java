@@ -39,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.Normalizer;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 
@@ -88,14 +87,12 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     VisualStudioSolution solution = new VisualStudioSolutionParser().parse(solutionFile);
     VisualStudioProjectParser projectParser = new VisualStudioProjectParser();
     for (VisualStudioSolutionProject solutionProject : solution.projects()) {
-      String escapedProjectName = escapeProjectName(solutionProject.name());
-
       if (!isSupportedProjectType(solutionProject)) {
         LOG.info("Skipping the unsupported project type: " + solutionProject.path());
-      } else if (skippedProjects.contains(escapedProjectName)) {
-        LOG.info("Skipping the project \"" + escapedProjectName + "\" because it is listed in the property \"" + VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS + "\".");
+      } else if (skippedProjects.contains(solutionProject.name())) {
+        LOG.info("Skipping the project \"" + solutionProject.name() + "\" because it is listed in the property \"" + VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS + "\".");
       } else if (isSkippedProjectByPattern(solutionProject.name())) {
-        LOG.info("Skipping the project \"" + escapedProjectName + "\" because it matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
+        LOG.info("Skipping the project \"" + solutionProject.name() + "\" because it matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
       } else {
         File projectFile = relativePathFile(solutionFile.getParentFile(), solutionProject.path());
         if (!projectFile.isFile()) {
@@ -105,7 +102,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
           File assembly = assemblyLocator.locateAssembly(solutionProject.name(), projectFile, project);
           if (skipNotBuildProjects() && assembly == null) {
             LOG.info(
-              "Skipping the project \"" + escapedProjectName + "\" because it is not built and  \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT + "\" is set.");
+              "Skipping the project \"" + solutionProject.name() + "\" because it is not built and  \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT + "\" is set.");
           } else {
             hasModules = true;
             buildModule(sonarProject, solutionProject.name(), projectFile, project, assembly, solutionFile);
@@ -163,18 +160,9 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
       }
     }
 
-    forwardModuleProperties(module, escapedProjectName);
     setFxCopProperties(module, projectFile, project, assembly);
     setReSharperProperties(module, projectName, solutionFile);
     setStyleCopProperties(module, projectFile);
-  }
-
-  private void forwardModuleProperties(ProjectDefinition module, String escapedProjectName) {
-    for (Map.Entry<String, String> entry : settings.getProperties().entrySet()) {
-      if (entry.getKey().startsWith(escapedProjectName + ".")) {
-        module.setProperty(entry.getKey().substring(escapedProjectName.length() + 1), entry.getValue());
-      }
-    }
   }
 
   private void setFxCopProperties(ProjectDefinition module, File projectFile, VisualStudioProject project, @Nullable File assembly) {
