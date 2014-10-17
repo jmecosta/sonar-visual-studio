@@ -88,11 +88,11 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     VisualStudioProjectParser projectParser = new VisualStudioProjectParser();
     for (VisualStudioSolutionProject solutionProject : solution.projects()) {
       if (!isSupportedProjectType(solutionProject)) {
-        LOG.info("Skipping the unsupported project type: " + solutionProject.path());
+        logSkippedProject(solutionProject, "because its project type is unsupported: " + solutionProject.path());
       } else if (skippedProjects.contains(solutionProject.name())) {
-        LOG.info("Skipping the project \"" + solutionProject.name() + "\" because it is listed in the property \"" + VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS + "\".");
+        logSkippedProject(solutionProject, "because it is listed in the property \"" + VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS + "\".");
       } else if (isSkippedProjectByPattern(solutionProject.name())) {
-        LOG.info("Skipping the project \"" + solutionProject.name() + "\" because it matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
+        logSkippedProject(solutionProject, "because it matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
       } else {
         File projectFile = relativePathFile(solutionFile.getParentFile(), solutionProject.path());
         if (!projectFile.isFile()) {
@@ -101,8 +101,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
           VisualStudioProject project = projectParser.parse(projectFile);
           File assembly = assemblyLocator.locateAssembly(solutionProject.name(), projectFile, project);
           if (skipNotBuildProjects() && assembly == null) {
-            LOG.info(
-              "Skipping the project \"" + solutionProject.name() + "\" because it is not built and  \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT + "\" is set.");
+            logSkippedProject(solutionProject, "because it is not built and  \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT + "\" is set.");
           } else {
             hasModules = true;
             buildModule(sonarProject, solutionProject.name(), projectFile, project, assembly, solutionFile);
@@ -112,6 +111,10 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     }
 
     Preconditions.checkState(hasModules, "No Visual Studio projects were found.");
+  }
+
+  private static void logSkippedProject(VisualStudioSolutionProject solutionProject, String reason) {
+    LOG.info("Skipping the project \"" + solutionProject.name() + "\" " + reason);
   }
 
   private boolean skipNotBuildProjects() {
