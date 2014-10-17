@@ -101,7 +101,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
           VisualStudioProject project = projectParser.parse(projectFile);
           File assembly = assemblyLocator.locateAssembly(solutionProject.name(), projectFile, project);
           if (skipNotBuildProjects() && assembly == null) {
-            logSkippedProject(solutionProject, "because it is not built and  \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT + "\" is set.");
+            logSkippedProject(solutionProject, "because it is not built and \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT + "\" is set.");
           } else {
             hasModules = true;
             buildModule(sonarProject, solutionProject.name(), projectFile, project, assembly, solutionFile);
