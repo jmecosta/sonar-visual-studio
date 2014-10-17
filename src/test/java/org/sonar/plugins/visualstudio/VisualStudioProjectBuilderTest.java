@@ -70,7 +70,7 @@ public class VisualStudioProjectBuilderTest {
     settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY, true);
     settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_TEST_PROJECT_PATTERN, ".*Test");
 
-    // This property must not be forwarded
+    // This property must be forwarded
     settings.setProperty("MyLibrary.sonar.something", "foobar");
     // This property must be overriden
     settings.setProperty("MyLibrary.sonar.cs.fxcop.assembly", "foobar");
@@ -101,7 +101,7 @@ public class VisualStudioProjectBuilderTest {
       .isEqualTo(new File("src/test/resources/VisualStudioProjectBuilderTest/single_sln/MyLibrary/Adder.cs").getAbsoluteFile());
     assertThat(libraryProject.getTestFiles()).isEmpty();
 
-    assertThat(libraryProject.getProperties().get("sonar.something")).isNull();
+    assertThat(libraryProject.getProperties().get("sonar.something")).isEqualTo("foobar");
 
     assertThat(libraryProject.getProperties().get("sonar.cs.fxcop.assembly")).isEqualTo("c:/MyLibrary.dll");
 
@@ -285,6 +285,9 @@ public class VisualStudioProjectBuilderTest {
 
     Settings settings = new Settings();
     settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY, true);
+    // These properties must be forwarded
+    settings.setProperty("über.sonar.something", "foobar");
+    settings.setProperty("foo bar.sonar.somethingElse", "foobar2");
 
     new VisualStudioProjectBuilder(settings).build(context);
 
@@ -295,11 +298,13 @@ public class VisualStudioProjectBuilderTest {
     assertThat(uberProject.getKey()).isEqualTo("solution:key:uber");
     assertThat(uberProject.getName()).isEqualTo("über");
     assertThat(uberProject.getWorkDir()).isEqualTo(new File(workingDir, "solution_key_uber"));
+    assertThat(uberProject.getProperties().getProperty("sonar.something")).isEqualTo("foobar");
 
     ProjectDefinition foobarProject = subModules.getAllValues().get(1);
     assertThat(foobarProject.getKey()).isEqualTo("solution:key:foo_bar");
     assertThat(foobarProject.getName()).isEqualTo("foo bar");
     assertThat(foobarProject.getWorkDir()).isEqualTo(new File(workingDir, "solution_key_foo_bar"));
+    assertThat(foobarProject.getProperties().getProperty("sonar.somethingElse")).isEqualTo("foobar2");
   }
 
   @Test

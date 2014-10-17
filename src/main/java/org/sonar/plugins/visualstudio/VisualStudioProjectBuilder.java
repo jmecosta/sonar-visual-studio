@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.Normalizer;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 
@@ -163,9 +164,18 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
       }
     }
 
+    forwardModuleProperties(module);
     setFxCopProperties(module, projectFile, project, assembly);
     setReSharperProperties(module, projectName, solutionFile);
     setStyleCopProperties(module, projectFile);
+  }
+
+  private void forwardModuleProperties(ProjectDefinition module) {
+    for (Map.Entry<String, String> entry : settings.getProperties().entrySet()) {
+      if (entry.getKey().startsWith(module.getName() + ".")) {
+        module.setProperty(entry.getKey().substring(module.getName().length() + 1), entry.getValue());
+      }
+    }
   }
 
   private void setFxCopProperties(ProjectDefinition module, File projectFile, VisualStudioProject project, @Nullable File assembly) {
