@@ -61,14 +61,14 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
   }
 
   public void build(Context context, VisualStudioAssemblyLocator assemblyLocator) {
-    ProjectDefinition solutionProject = context.projectReactor().getRoot();
+    ProjectDefinition sonarProject = context.projectReactor().getRoot();
 
     if (!settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY)) {
       LOG.info("To enable the analysis bootstraper for Visual Studio projects, set the property \"" + VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY + "\" to \"true\"");
       return;
     }
 
-    File solutionFile = getSolutionFile(solutionProject.getBaseDir());
+    File solutionFile = getSolutionFile(sonarProject.getBaseDir());
     if (solutionFile == null) {
       LOG.info("No Visual Studio solution file found.");
       return;
@@ -80,26 +80,32 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
       throw new SonarException("Do not use the Visual Studio bootstrapper and set the \"" + SONAR_MODULES_PROPERTY_KEY + "\" property at the same time.");
     }
 
-    solutionProject.resetSourceDirs();
+    sonarProject.resetSourceDirs();
 
+    Set<String> skippedProjects = skippedProjectsByNames();
     boolean hasModules = false;
 
     VisualStudioSolution solution = new VisualStudioSolutionParser().parse(solutionFile);
     VisualStudioProjectParser projectParser = new VisualStudioProjectParser();
-    for (VisualStudioSolutionProject project : solution.projects()) {
-      String escapedProjectName = escapeProjectName(project.name());
+    for (VisualStudioSolutionProject solutionProject : solution.projects()) {
+      String escapedProjectName = escapeProjectName(solutionProject.name());
 
-      if (!isSupportedProjectType(project)) {
-        LOG.info("Skipping the unsupported project type: " + project.path());
-      } else if (isSkippedProject(project.name(), escapedProjectName)) {
+      if (!isSupportedProjectType(solutionProject)) {
+        LOG.info("Skipping the unsupported project type: " + solutionProject.path());
+      } else if (skippedProjects.contains(escapedProjectName)) {
+        LOG.info("Skipping the project \"" + escapedProjectName + "\" because it is listed in the property \"" + VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS + "\".");
+      } else if (isSkippedProjectByPattern(solutionProject.name())) {
         LOG.info("Skipping the project \"" + escapedProjectName + "\" because it matches the property \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN + "\".");
       } else {
-        File projectFile = relativePathFile(solutionFile.getParentFile(), project.path());
+        File projectFile = relativePathFile(solutionFile.getParentFile(), solutionProject.path());
         if (!projectFile.isFile()) {
           LOG.warn("Unable to find the Visual Studio project file " + projectFile.getAbsolutePath());
         } else {
+          VisualStudioProject project = projectParser.parse(projectFile);
+          File assembly = assemblyLocator.locateAssembly(solutionProject.name(), projectFile, project);
+
           hasModules = true;
-          buildModule(solutionProject, project.name(), projectFile, projectParser.parse(projectFile), assemblyLocator, solutionFile);
+          buildModule(sonarProject, solutionProject.name(), projectFile, project, assembly, solutionFile);
         }
       }
     }
@@ -114,8 +120,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
       path.endsWith(".vcxproj");
   }
 
-  private void buildModule(ProjectDefinition solutionProject, String projectName, File projectFile, VisualStudioProject project, VisualStudioAssemblyLocator assemblyLocator,
-    File solutionFile) {
+  private void buildModule(ProjectDefinition solutionProject, String projectName, File projectFile, VisualStudioProject project, @Nullable File assembly, File solutionFile) {
     String escapedProjectName = escapeProjectName(projectName);
 
     ProjectDefinition module = ProjectDefinition.create()
@@ -151,7 +156,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     }
 
     forwardModuleProperties(module, escapedProjectName);
-    setFxCopProperties(module, projectFile, project, assemblyLocator);
+    setFxCopProperties(module, projectFile, project, assembly);
     setReSharperProperties(module, projectName, solutionFile);
     setStyleCopProperties(module, projectFile);
   }
@@ -164,8 +169,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     }
   }
 
-  private void setFxCopProperties(ProjectDefinition module, File projectFile, VisualStudioProject project, VisualStudioAssemblyLocator assemblyLocator) {
-    File assembly = assemblyLocator.locateAssembly(module.getName(), projectFile, project);
+  private void setFxCopProperties(ProjectDefinition module, File projectFile, VisualStudioProject project, @Nullable File assembly) {
     if (assembly == null) {
       return;
     }
@@ -259,12 +263,8 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     return matchesPropertyRegex(VisualStudioPlugin.VISUAL_STUDIO_TEST_PROJECT_PATTERN, projectName);
   }
 
-  private boolean isSkippedProject(String projectName, String escapedProjectName) {
-    boolean result = matchesPropertyRegex(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN, projectName);
-    if (!result) {
-      result = skippedProjects().contains(escapedProjectName);
-    }
-    return result;
+  private boolean isSkippedProjectByPattern(String projectName) {
+    return matchesPropertyRegex(VisualStudioPlugin.VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN, projectName);
   }
 
   private boolean matchesPropertyRegex(String propertyKey, String value) {
@@ -277,7 +277,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
     }
   }
 
-  private Set<String> skippedProjects() {
+  private Set<String> skippedProjectsByNames() {
     String skippedProjects = settings.getString(VisualStudioPlugin.VISUAL_STUDIO_OLD_SKIPPED_PROJECTS);
     if (skippedProjects == null) {
       return ImmutableSet.of();
