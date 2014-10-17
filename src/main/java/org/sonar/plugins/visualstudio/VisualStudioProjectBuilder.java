@@ -103,14 +103,22 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
         } else {
           VisualStudioProject project = projectParser.parse(projectFile);
           File assembly = assemblyLocator.locateAssembly(solutionProject.name(), projectFile, project);
-
-          hasModules = true;
-          buildModule(sonarProject, solutionProject.name(), projectFile, project, assembly, solutionFile);
+          if (skipNotBuildProjects() && assembly == null) {
+            LOG.info(
+              "Skipping the project \"" + escapedProjectName + "\" because it is not built and  \"" + VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT + "\" is set.");
+          } else {
+            hasModules = true;
+            buildModule(sonarProject, solutionProject.name(), projectFile, project, assembly, solutionFile);
+          }
         }
       }
     }
 
     Preconditions.checkState(hasModules, "No Visual Studio projects were found.");
+  }
+
+  private boolean skipNotBuildProjects() {
+    return settings.getBoolean(VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT);
   }
 
   private boolean isSupportedProjectType(VisualStudioSolutionProject project) {

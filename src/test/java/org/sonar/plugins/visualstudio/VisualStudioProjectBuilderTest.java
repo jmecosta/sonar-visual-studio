@@ -413,6 +413,24 @@ public class VisualStudioProjectBuilderTest {
     assertThat(nonWebAppProject.getProperties().get("sonar.cs.fxcop.aspnet")).isNull();
   }
 
+  @Test
+  public void should_skip_projects_which_are_not_built() {
+    Context context = mockContext("solution:key", new File("src/test/resources/VisualStudioProjectBuilderTest/skip_if_not_built/"));
+
+    Settings settings = new Settings();
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_ENABLE_PROPERTY_KEY, true);
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT, false);
+
+    new VisualStudioProjectBuilder(settings).build(context, mock(VisualStudioAssemblyLocator.class));
+
+    settings.setProperty(VisualStudioPlugin.VISUAL_STUDIO_SKIP_IF_NOT_BUILT, true);
+
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("No Visual Studio projects were found.");
+
+    new VisualStudioProjectBuilder(settings).build(context, mock(VisualStudioAssemblyLocator.class));
+  }
+
   private static Context mockContext(String key, File baseDir) {
     ProjectDefinition project = mock(ProjectDefinition.class);
     when(project.getKey()).thenReturn(key);

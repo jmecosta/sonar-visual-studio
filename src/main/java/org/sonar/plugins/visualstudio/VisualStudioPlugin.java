@@ -34,6 +34,7 @@ public class VisualStudioPlugin extends SonarPlugin {
   public static final String VISUAL_STUDIO_OUTPUT_PATHS_PROPERTY_KEY = "sonar.visualstudio.outputPaths";
   public static final String VISUAL_STUDIO_TEST_PROJECT_PATTERN = "sonar.visualstudio.testProjectPattern";
   public static final String VISUAL_STUDIO_SKIPPED_PROJECT_PATTERN = "sonar.visualstudio.skippedProjectPattern";
+  public static final String VISUAL_STUDIO_SKIP_IF_NOT_BUILT = "sonar.visualstudio.skipIfNotBuilt";
 
   public static final String VISUAL_STUDIO_OLD_SKIPPED_PROJECTS = "sonar.visualstudio.skippedProjects";
   public static final String VISUAL_STUDIO_OLD_OUTPUT_PATH_PROPERTY_KEY = "sonar.visualstudio.outputPath";
@@ -90,7 +91,15 @@ public class VisualStudioPlugin extends SonarPlugin {
         .name("Skipped project pattern")
         .defaultValue("")
         .description("Regular expression matched by skipped project names.")
-        .onlyOnQualifiers(Qualifiers.PROJECT)
+        .onQualifiers(Qualifiers.PROJECT)
+        .build(),
+      PropertyDefinition
+        .builder(VISUAL_STUDIO_SKIP_IF_NOT_BUILT)
+        .category(CATEGORY)
+        .name("Skip not built projects")
+        .defaultValue("false")
+        .description("Skip the analysis of projects for which the assemblies are not found.")
+        .onQualifiers(Qualifiers.PROJECT)
         .build(),
 
       deprecatedPropertyDefinition(VISUAL_STUDIO_OLD_SKIPPED_PROJECTS),
