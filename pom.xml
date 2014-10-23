@@ -10,7 +10,7 @@
 
   <groupId>org.codehaus.sonar-plugins.visualstudio</groupId>
   <artifactId>sonar-visual-studio-plugin</artifactId>
-  <version>1.2</version>
+  <version>1.3-SNAPSHOT</version>
   <packaging>sonar-plugin</packaging>
 
   <name>Analysis Bootstrapper for Visual Studio Projects</name>
@@ -39,7 +39,7 @@
     <connection>scm:git:git@github.com:SonarCommunity/sonar-visual-studio.git</connection>
     <developerConnection>scm:git:git@github.com:SonarCommunity/sonar-visual-studio.git</developerConnection>
     <url>https://github.com/SonarCommunity/sonar-visual-studio</url>
-    <tag>1.2</tag>
+    <tag>HEAD</tag>
   </scm>
   <url>http://docs.codehaus.org/x/TAA1Dg</url>
   <issueManagement>
