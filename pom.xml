@@ -41,7 +41,7 @@
     <url>https://github.com/SonarCommunity/sonar-visual-studio</url>
     <tag>HEAD</tag>
   </scm>
-  <url>http://docs.codehaus.org/x/TAA1Dg</url>
+  <url>http://redirect.sonarsource.com/plugins/visualstudio.html</url>
   <issueManagement>
     <system>JIRA</system>
     <url>http://jira.codehaus.org/browse/SONARVS</url>
