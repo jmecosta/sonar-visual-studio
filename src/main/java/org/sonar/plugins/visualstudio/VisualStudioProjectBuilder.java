@@ -125,6 +125,7 @@ public class VisualStudioProjectBuilder extends ProjectBuilder {
   private boolean isSupportedProjectType(VisualStudioSolutionProject project) {
     String path = project.path().toLowerCase();
     return path.endsWith(".csproj") ||
+      path.endsWith(".fsproj") ||
       path.endsWith(".vbproj") ||
       path.endsWith(".vcxproj");
   }
